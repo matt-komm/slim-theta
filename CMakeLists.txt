@@ -26,10 +26,14 @@ find_package(ROOT
 
 include_directories(${Boost_INCLUDE_DIRS})
 message("include Boost from: " ${Boost_INCLUDE_DIRS})
+message("link Boost: " ${Boost_LIBRARIES})
 include_directories(${ROOT_INCLUDE_DIR})
 message("include Root from: " ${ROOT_INCLUDE_DIR})
+message("link Root: " ${ROOT_LIBRARIES})
 include_directories(${SQLITE_INCLUDE_DIR})
 message("include Sqlite from: " ${SQLITE_INCLUDE_DIR})
+message("link Sqlite: " ${SQLITE_LIBRARIES})
+
 include_directories(${CMAKE_SOURCE_DIR})
 
 
