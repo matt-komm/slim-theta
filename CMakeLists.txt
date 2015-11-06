@@ -1,20 +1,39 @@
-cmake_minimum_required(VERSION 2.6)
+cmake_minimum_required(VERSION 2.8.3)
 project(theta)
 
+set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_MODULE_PATH})
 
-set(Boost_ADDITIONAL_VERSIONS "1.52" "1.52.0")
-find_package(Boost REQUIRED COMPONENTS regex program_options filesystem system thread timer iostreams)
+set(BOOST_ROOT "" CACHE PATH "Boost install prefix")
+if (NOT BOOST_ROOT STREQUAL "")
+    message(STATUS "boost will be taken from BOOST_ROOT=" ${BOOST_ROOT})
+    set(Boost_NO_SYSTEM_PATHS ON)
+else(NOT BOOST_ROOT STREQUAL "")
+    message(STATUS "auto detecting boost. Set '-DBOOST_ROOT=' to override!")
+endif(NOT BOOST_ROOT STREQUAL "")
 
-if(NOT Boost_FOUND)
-   message(SEND_ERROR "boost not found")
-else()
-   message("boost found at include=${Boost_INCLUDE_DIRS}; lib=${Boost_LIBRARY_DIRS}")
-endif()
+find_package(Boost 
+    REQUIRED 
+    COMPONENTS regex program_options filesystem system thread timer iostreams
+)
+
+find_package(Sqlite
+    REQUIRED 
+)
+
+find_package(ROOT 
+    REQUIRED 
+)
 
 include_directories(${Boost_INCLUDE_DIRS})
+message("include Boost from: " ${Boost_INCLUDE_DIRS})
+include_directories(${ROOT_INCLUDE_DIR})
+message("include Root from: " ${ROOT_INCLUDE_DIR})
+include_directories(${SQLITE_INCLUDE_DIR})
+message("include Sqlite from: " ${SQLITE_INCLUDE_DIR})
 include_directories(${CMAKE_SOURCE_DIR})
+
 
 add_subdirectory(libconfig)
 add_subdirectory(src)
-
-
+add_subdirectory(bin)
+add_subdirectory(plugins)

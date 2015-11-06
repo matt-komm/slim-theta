@@ -1,4 +1,6 @@
 add_library(libtheta SHARED
+    asimov-utils.cpp
+    atomic.cpp
     run.cpp
     toymaker.cpp
     random.cpp
@@ -25,5 +27,4 @@ add_library(libtheta SHARED
     minimizer.cpp
 )
 target_link_libraries(libtheta m dl libconfig ${Boost_LIBRARIES})
-
 
