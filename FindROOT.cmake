@@ -114,6 +114,12 @@ IF (ROOT_FOUND)
 #    ARGS "--noldflags --noauxlibs --libs" 
     ARGS "--glibs" 
     OUTPUT_VARIABLE root_flags )
+    
+  # ask root-config for the compile flags
+  EXEC_PROGRAM( ${ROOT_CONFIG_EXECUTABLE}
+#    ARGS "--noldflags --noauxlibs --libs" 
+    ARGS "--cflags" 
+    OUTPUT_VARIABLE ROOT_cflags )
 
 #  STRING(REGEX MATCHALL "([^ ])+"  root_libs_all ${root_flags})
 #  STRING(REGEX MATCHALL "-L([^ ])+"  root_library ${root_flags})
