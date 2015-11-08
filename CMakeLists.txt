@@ -25,11 +25,11 @@ message("link Boost: " ${Boost_LIBRARIES})
 include_directories(${ROOT_INCLUDE_DIR})
 message("include Root from: " ${ROOT_INCLUDE_DIR})
 message("link Root: " ${ROOT_LIBRARIES})
-include_directories(${SQLITE_INCLUDE_DIR})
-message("include Sqlite from: " ${SQLITE_INCLUDE_DIR})
-message("link Sqlite: " ${SQLITE_LIBRARIES})
+include_directories(${Sqlite_INCLUDE_DIR})
+message("include Sqlite from: " ${Sqlite_INCLUDE_DIR})
+message("link Sqlite: " ${Sqlite_LIBRARIES})
 
-include_directories(${CMAKE_SOURCE_DIR})
+include_directories(${CMAKE_SOURCE_DIR} ${Sqlite_INCLUDE_DIR} ${ROOT_INCLUDE_DIR} ${Boost_INCLUDE_DIR})
 
 
 add_subdirectory(libconfig)

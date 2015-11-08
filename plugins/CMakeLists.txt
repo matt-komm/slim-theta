@@ -48,6 +48,6 @@ add_library(plugins MODULE
     vary_one.cpp
 )
 
-target_link_libraries(plugins libtheta ${SQLITE_LIBRARIES} ${Boost_LIBRARIES})
+target_link_libraries(plugins libtheta ${Sqlite_LIBRARIES} ${Boost_LIBRARIES})
 
 
