@@ -1,6 +1,3 @@
-
-
-
 from ModelClasses import *
 from optparse import OptionParser
 import math
@@ -9,193 +6,230 @@ import os
 import logging
 import copy
 import random
-
+import re
 import ROOT
 
 ROOT.gROOT.SetStyle("Plain")
 ROOT.gStyle.SetOptStat(0)
 
-setDict = {
-    "tChan":{
-        "folders":["iso/nominal/T_t","iso/nominal/Tbar_t"],
-        "weight":"1.0"
+sampleDict = {
+    "tChannel":
+    {
+        "processes":[
+            "ST_t-channel_4f_leptonDecays_13TeV-amcatnlo-pythia8_TuneCUETP8M1",
+        ],
+        "color":ROOT.gROOT.GetColor(ROOT.kRed),
+        "title":"t-channel",
+        "weight":"((Generated_1__genweight<0)*(-1)+(Generated_1__genweight>0)*1)"
     },
-    "DY":{
-        "folders":["iso/nominal/DYJets"],
-        "weight":"1.0"
+
+    "tWChannel":
+    {
+        "processes":[
+            "ST_tW_top_5f_inclusiveDecays_13TeV-powheg-pythia8_TuneCUETP8M1",
+            "ST_tW_antitop_5f_inclusiveDecays_13TeV-powheg-pythia8_TuneCUETP8M1"
+        ],
+        "color":ROOT.gROOT.GetColor(ROOT.kOrange),
+        "title":"tW-channel",
+        "weight":"((Generated_1__genweight<0)*(-1)+(Generated_1__genweight>0)*1)"
     },
-    "sChan":{
-        "folders":["iso/nominal/T_s","iso/nominal/Tbar_s"],
-        "weight":"1.0"
+
+    "TTJets":
+    {
+        "processes":[
+            "TT_TuneCUETP8M1_13TeV-powheg-pythia8_ext"
+        ],
+        "color":ROOT.gROOT.GetColor(ROOT.kOrange-3),
+        "title":"t#bar{t}",
+        "weight":"((Generated_1__genweight<0)*(-1)+(Generated_1__genweight>0)*1)"
     },
-    "tWChan":{
-        "folders":["iso/nominal/T_tW","iso/nominal/Tbar_tW"],
-        "weight":"1.0"
+    
+    "WJetsAMC":
+    {
+        "processes":[
+            "WJetsToLNu_TuneCUETP8M1_13TeV-amcatnloFXFX-pythia8"
+        ],
+        "color":ROOT.gROOT.GetColor(ROOT.kGreen-2),
+        "title":"W+jets",
+        "addtitle":"(aMC@NLO)",
+        "weight":"((Generated_1__genweight<0)*(-1)+(Generated_1__genweight>0)*1)*(1+0.8*(Reconstructed_1__nSelectedJet==2)*(Reconstructed_1__nSelectedBJet==1))"
     },
-    "tChanLeptons":{
-        "folders":["iso/nominal/T_t_ToLeptons","iso/nominal/Tbar_t_ToLeptons"],
-        "weight":"1.0"
-    },
-    "TTJetsDi":{
-        "folders":["iso/nominal/TTJets_FullLept"],
-        "weight":"(top_weight)"
-    },
-    "TTJetsSemi":{
-        "folders":["iso/nominal/TTJets_SemiLept"],
-        "weight":"(top_weight)"
-    },
-    "TTJetsFull":{
-        "folders":["iso/nominal/TTJets_MassiveBinDECAY"],
-        "weight":"(top_weight)"
-    },
-    "WJetsExclBF":{
-        "folders":["iso/nominal/W1Jets_exclusive","iso/nominal/W2Jets_exclusive","iso/nominal/W3Jets_exclusive","iso/nominal/W4Jets_exclusive"],
-        #"weight":"(fabs(ljet_id)==5 || fabs(bjet_id)==5 || fabs(sjet1_id)==5 || fabs(sjet2_id)==5)"
-        "weight":"(abs(ljet_id)==5 || abs(bjet_id)==5 || abs(sjet1_id)==5 || abs(sjet2_id)==5)"
-    },
-    "WJetsExclCF":{
-        "folders":["iso/nominal/W1Jets_exclusive","iso/nominal/W2Jets_exclusive","iso/nominal/W3Jets_exclusive","iso/nominal/W4Jets_exclusive"],
-        #"weight":"((fabs(ljet_id)!=5 && fabs(bjet_id)!=5 && fabs(sjet1_id)!=5 && fabs(sjet2_id)!=5) && (fabs(ljet_id)==4 || fabs(bjet_id)==4 || fabs(sjet1_id)==4 || fabs(sjet2_id)==4))"
-        "weight":"((abs(ljet_id)!=5 && abs(bjet_id)!=5 && abs(sjet1_id)!=5 && abs(sjet2_id)!=5) && (abs(ljet_id)==4 || abs(bjet_id)==4 || abs(sjet1_id)==4 || abs(sjet2_id)==4))"
-    },
-    "WJetsExclLF":{
-        "folders":["iso/nominal/W1Jets_exclusive","iso/nominal/W2Jets_exclusive","iso/nominal/W3Jets_exclusive","iso/nominal/W4Jets_exclusive"],
-        #"weight":"(fabs(ljet_id)!=5 && fabs(bjet_id)!=5 && fabs(sjet1_id)!=5 && fabs(sjet2_id)!=5 && fabs(ljet_id)!=4 && fabs(bjet_id)!=4 && fabs(sjet1_id)!=4 && fabs(sjet2_id)!=4)"
-        "weight":"(abs(ljet_id)!=5 && abs(bjet_id)!=5 && abs(sjet1_id)!=5 && abs(sjet2_id)!=5 && abs(ljet_id)!=4 && abs(bjet_id)!=4 && abs(sjet1_id)!=4 && abs(sjet2_id)!=4)"
-    },
-    "DiBoson":{
-        "folders":["iso/nominal/WW","iso/nominal/WZ","iso/nominal/ZZ"],
-        "weight":"1.0"
+    
+    "WJetsMG":
+    {
+        "processes":[
+            "WJetsToLNu_TuneCUETP8M1_13TeV-madgraphMLM-pythia8"
+        ],
+        "color":ROOT.gROOT.GetColor(ROOT.kGreen-2),
+        "title":"W+jets",
+        "addtitle":"(MadGraph)",
+        "weight":"((Generated_1__genweight<0)*(-1)+(Generated_1__genweight>0)*1)*(1+0.8*(Reconstructed_1__nSelectedJet==2)*(Reconstructed_1__nSelectedBJet==1))"
     },
     
     
-    
-    
-    "tChanAntiiso":{
-        "folders":["antiiso/nominal/T_t","antiiso/nominal/Tbar_t"],
-        "weight":"(-1.0)*pu_weight*b_weight*lepton_weight__id*lepton_weight__trigger*lepton_weight__iso*xsweight*19700"
+    "DY":
+    {
+        "processes":[
+            "DYJetsToLL_M-50_TuneCUETP8M1_13TeV-amcatnloFXFX-pythia8"
+        ],
+        "color":ROOT.gROOT.GetColor(ROOT.kBlue-1),
+        "title":"Drell-Yan",
+        #"addtitle":"(#times 1.8)",
+        "weight":"((Generated_1__genweight<0)*(-1)+(Generated_1__genweight>0)*1)*(1+0.8*(Reconstructed_1__nSelectedJet==2)*(Reconstructed_1__nSelectedBJet==1))"
     },
-    "DYAntiiso":{
-        "folders":["antiiso/nominal/DYJets"],
-        "weight":"(-1.0)*pu_weight*b_weight*lepton_weight__id*lepton_weight__trigger*lepton_weight__iso*xsweight*19700"
-    },
-    "sChanAntiiso":{
-        "folders":["antiiso/nominal/T_s","antiiso/nominal/Tbar_s"],
-        "weight":"(-1.0)*pu_weight*b_weight*lepton_weight__id*lepton_weight__trigger*lepton_weight__iso*xsweight*19700"
-    },
-    "tWChanAntiiso":{
-        "folders":["antiiso/nominal/T_tW","antiiso/nominal/Tbar_tW"],
-        "weight":"(-1.0)*pu_weight*b_weight*lepton_weight__id*lepton_weight__trigger*lepton_weight__iso*xsweight*19700"
-    },
-    "tChanLeptonsAntiiso":{
-        "folders":["antiiso/nominal/T_t_ToLeptons","antiiso/nominal/Tbar_t_ToLeptons"],
-        "weight":"(-1.0)*pu_weight*b_weight*lepton_weight__id*lepton_weight__trigger*lepton_weight__iso*xsweight*19700"
-    },
-    "TTJetsDiAntiiso":{
-        "folders":["antiiso/nominal/TTJets_FullLept"],
-        "weight":"(-1.0)*(top_weight)*pu_weight*b_weight*lepton_weight__id*lepton_weight__trigger*lepton_weight__iso*xsweight*19700"
-    },
-    "TTJetsSemiAntiiso":{
-        "folders":["antiiso/nominal/TTJets_SemiLept"],
-        "weight":"(-1.0)*(top_weight)*pu_weight*b_weight*lepton_weight__id*lepton_weight__trigger*lepton_weight__iso*xsweight*19700"
-    },
-    "TTJetsFullAntiiso":{
-        "folders":["antiiso/nominal/TTJets_MassiveBinDECAY"],
-        "weight":"(-1.0)*(top_weight)*pu_weight*b_weight*lepton_weight__id*lepton_weight__trigger*lepton_weight__iso*xsweight*19700"
-    },
-    "WJetsExclBFAntiiso":{
-        "folders":["antiiso/nominal/W1Jets_exclusive","antiiso/nominal/W2Jets_exclusive","antiiso/nominal/W3Jets_exclusive","antiiso/nominal/W4Jets_exclusive"],
-        #"weight":"(fabs(ljet_id)==5 || fabs(bjet_id)==5 || fabs(sjet1_id)==5 || fabs(sjet2_id)==5)"
-        "weight":"(-1.0)*(abs(ljet_id)==5 || abs(bjet_id)==5 || abs(sjet1_id)==5 || abs(sjet2_id)==5)*pu_weight*b_weight*lepton_weight__id*lepton_weight__trigger*lepton_weight__iso*xsweight*19700"
-    },
-    "WJetsExclCFAntiiso":{
-        "folders":["antiiso/nominal/W1Jets_exclusive","antiiso/nominal/W2Jets_exclusive","antiiso/nominal/W3Jets_exclusive","antiiso/nominal/W4Jets_exclusive"],
-        #"weight":"((fabs(ljet_id)!=5 && fabs(bjet_id)!=5 && fabs(sjet1_id)!=5 && fabs(sjet2_id)!=5) && (fabs(ljet_id)==4 || fabs(bjet_id)==4 || fabs(sjet1_id)==4 || fabs(sjet2_id)==4))"
-        "weight":"(-1.0)*((abs(ljet_id)!=5 && abs(bjet_id)!=5 && abs(sjet1_id)!=5 && abs(sjet2_id)!=5) && (abs(ljet_id)==4 || abs(bjet_id)==4 || abs(sjet1_id)==4 || abs(sjet2_id)==4))*pu_weight*b_weight*lepton_weight__id*lepton_weight__trigger*lepton_weight__iso*xsweight*19700"
-    },
-    "WJetsExclLFAntiiso":{
-        "folders":["antiiso/nominal/W1Jets_exclusive","antiiso/nominal/W2Jets_exclusive","antiiso/nominal/W3Jets_exclusive","antiiso/nominal/W4Jets_exclusive"],
-        #"weight":"(fabs(ljet_id)!=5 && fabs(bjet_id)!=5 && fabs(sjet1_id)!=5 && fabs(sjet2_id)!=5 && fabs(ljet_id)!=4 && fabs(bjet_id)!=4 && fabs(sjet1_id)!=4 && fabs(sjet2_id)!=4)"
-        "weight":"(-1.0)*(abs(ljet_id)!=5 && abs(bjet_id)!=5 && abs(sjet1_id)!=5 && abs(sjet2_id)!=5 && abs(ljet_id)!=4 && abs(bjet_id)!=4 && abs(sjet1_id)!=4 && abs(sjet2_id)!=4)*pu_weight*b_weight*lepton_weight__id*lepton_weight__trigger*lepton_weight__iso*xsweight*19700"
-    },
-    "DiBosonAntiiso":{
-        "folders":["antiiso/nominal/WW","antiiso/nominal/WZ","antiiso/nominal/ZZ"],
-        "weight":"(-1.0)*pu_weight*b_weight*lepton_weight__id*lepton_weight__trigger*lepton_weight__iso*xsweight*19700"
-    },
-    "QCDMu":{
-        "folders":["antiiso/data/SingleMu"],
-        "weight":"1.0"
-    },
-    "QCDEle":{
-        "folders":["antiiso/data/SingleEle"],
-        "weight":"1.0"
+
+    "QCD":
+    {
+        "processes":[
+            "QCD_Pt-20toInf_MuEnrichedPt15_TuneCUETP8M1_13TeV_pythia8",
+        ],
+        "color":ROOT.gROOT.GetColor(ROOT.kGray),
+        "title":"QCD (MC)",# #lower[-0.06]{#scale[0.85]{#times#frac{1}{5}}}",
+        "weight":"((Generated_1__genweight<0)*(-1)+(Generated_1__genweight>0)*1)"
     },
     
-    
-    
-    "SingleMu":{
-        "folders":["iso/data/SingleMu"],
-        "weight":"1.0"
+    "data1":
+    {
+        "processes":[
+            "SingleMuon_Run2015D-05Oct2015-v1",
+        ],
+        "color":ROOT.gROOT.GetColor(ROOT.kBlack),
+        "title":"Data",
+        "weight":"((Reconstructed_1__HLT_IsoMu20_v2==1)+(Reconstructed_1__HLT_IsoMu20_v3==1))"
     },
-    "SingleEle":{
-        "folders":["iso/data/SingleEle"],
-        "weight":"1.0"
+    
+    "data2":
+    {
+        "processes":[
+            "SingleMuon_Run2015D-PromptReco-v4",
+        ],
+        "color":ROOT.gROOT.GetColor(ROOT.kBlack),
+        "title":"Data",
+        "weight":"(Reconstructed_1__HLT_IsoMu20_v3==1)"
     }
 }
 
-for sample in setDict.keys():
-    setDict[sample]["files"]=[]
-    setDict[sample]["weights"]=[]
-    for folder in setDict[sample]["folders"]:
-        path = os.path.join(os.getcwd(),"skimmed/Apr21/output/Apr21_btags",folder)
+rootFilesMC=[]
+rootFilesData=[]
+
+basedirMC = os.path.join(os.getcwd(),"evaluate25ns")
+matchMC = re.compile("mc[0-9]+.root")
+basedirData = os.path.join(os.getcwd(),"evaluate25nsData")
+matchData = re.compile("data[0-9]+.root")
+
+for f in os.listdir(basedirMC):
+    if matchMC.match(f):
+        rootFilesMC.append(os.path.join(basedirMC,f))
+
+for f in os.listdir(basedirData):
+    if matchData.match(f):
+        rootFilesData.append(os.path.join(basedirData,f))
         
-        for root, dirs, files in os.walk(path):
-            for file in files:
-                #print os.path.join(root,file)
+print "found MC=",len(rootFilesMC)," and data=",len(rootFilesData)," files"
+
+
+
+
+uncertainties = {
+    "other":{"type":"gauss","config":{"mean": "1.0", "width":"0.5", "range":"(0.0,\"inf\")"}},
+    "topbg":{"type":"gauss","config":{"mean": "1.0", "width":"2.0", "range":"(0.0,\"inf\")"}},
+    "tChan":{"type":"gauss","config":{"mean": "1.0", "width":"100.0", "range":"(0.0,\"inf\")"}},
+    "qcd":{"type":"gauss","config":{"mean": "1.0", "width":"2.0", "range":"(0.0,\"inf\")"}}
+}
+
+observables = {
+    "2j1t": {
+        #"weight":"1",
+        "weight":"(n_signal_mu==1)*(n_signal_ele==0)*(n_veto_mu==0)*(n_veto_ele==0)*(hlt_mu==1)*(ljet_dr>0.3)*(bjet_dr>0.3)*(njets==2)*(ntags==1)*(bdt_qcd>-0.15)"
+    },
+    "3j2t": {
+        #"weight":"1",
+        "weight":"(n_signal_mu==1)*(n_signal_ele==0)*(n_veto_mu==0)*(n_veto_ele==0)*(hlt_mu==1)*(ljet_dr>0.3)*(bjet_dr>0.3)*(njets==3)*(ntags==2)*(bdt_qcd>-0.15)"
+    },
+}
+
+globalMCWeight="(Reconstructed_1__HLT_IsoMu20_v1==1)*(Reconstructed_1__PU69000_weight)"
+
+components={
+    "other":
+    {
+        "sets":["DY"],
+        "uncertainties":["other"],
+        "weight":globalMCWeight,
+        "color":ROOT.kGreen+1
+    },
+    "topbg":
+    {
+        "sets":["tWChannel","TTJets"],
+        "uncertainties":["topbg"],
+        "weight":globalMCWeight,
+        "color":ROOT.kOrange
+    },
+    "tChan":
+    {
+        "sets":["tChannel"],
+        "uncertainties":["tChan"],
+        "weight":globalMCWeight,
+        "color":ROOT.kMagenta
+    },
+    "QCD":
+    {
+        "sets":["QCD"],
+        "uncertainties":["qcd"],
+        "weight":globalMCWeight,
+        "color":ROOT.kGray+1
+    }
+}
+
+data = {
+    "data":
+    {
+        "sets":["data1","data2"],
+        "weight":"1"
+    }
+}
+
+
+binning=20
+ranges=[-1,1]
+
+
+model=Model(modelName, {"bb_uncertainties":"true"})
+
+for uncertainty in uncertainties.keys():
+    uncertaintyDict[uncertainty]["dist"]=Distribution(uncertainty, uncertaintyDict[uncertainty]["type"], uncertaintyDict[uncertainty]["config"])
+    file.write(uncertaintyDict[uncertainty]["dist"].toConfigString())
+        
+for observableName in observables.keys():
+    observable = Observable(observableName, binning, ranges)
+    observableWeight = observables[observableName]["weight"]
+    
+    for componentName in components.keys():
+        componentWeight = components[componentName]["weight"]
+        componentUncertainties = components[componentName]["uncertainties"]
+        
+        for componentSetName in components[componentName]["sets"]:
+            for processName in sampleDict[setName]["processes"]:
+                processWeight = sampleDict[setName]["weight"]
                 
-                if file.endswith(".root"):
-                    datafile=os.path.join(root,file)
-                    weightfile=os.path.join(root,file+".added")
-                    if os.path.exists(weightfile):
-                        setDict[sample]["files"].append(datafile)
-                        setDict[sample]["weights"].append(weightfile)
-                    else:
-                        print "weight file not found ",weightfile
-    if len(setDict[sample]["files"])==len(setDict[sample]["weights"]):
-        print "found ... ",sample,"...",len(setDict[sample]["files"])," files"
-    else:
-        print "ERROR"
+                for i,f in enumerate(rootFilesMC):
+                    rootFile = ROOT.TFile(f)
+                    tree = rootFile.Get(processName)
+                    if (tree):
+                        component=ObservableComponent(observableName+"__"+componentName+"__"+componentSetName+"__"+processName+"__"+str(i))
+                        coeff=CoefficientMultiplyFunction()
+                        for uncertaintyName in componentUncertainties:
+                            coeff.addDistribution(uncertainties[uncertaintyName],uncertainties[uncertaintyName].getParameterName())
+                        component.setCoefficientFunction(coeff)
+                        observable.addComponent(component)
+                    rootFile.Close()
+                
+            
 
-def generateModel(modelName="fit",
-                    prefix="",
-                    dataDict={},
-                    histSetDict={},
-                    uncertaintyDict={},
-                    binning=1,
-                    ranges=[-1.0,1.0],
-                    dicePoisson=True,
-                    mcUncertainty=True):
-    
-    file=open(modelName+".cfg", "w")
-    
-    model=Model(modelName)
-    if mcUncertainty:
-        model=Model(modelName, {"bb_uncertainties":"true"})
+    model.addObservable(obs)
+    #break
 
-    for uncertainty in uncertaintyDict.keys():
-        uncertaintyDict[uncertainty]["dist"]=Distribution(uncertainty, uncertaintyDict[uncertainty]["type"], uncertaintyDict[uncertainty]["config"])
-        file.write(uncertaintyDict[uncertainty]["dist"].toConfigString())
-    
-    
-    varName = "bdt_sig_bg"
-    
-    
-    
-    dataStacks={}
-    mcStacks={}
-    
-    for observable in dataDict.keys():
-    
+    '''
         dataStack = ROOT.THStack()
         dataStacks[observable]=dataStack
         histoadd = HistoAdd(observable+"__data")
@@ -248,64 +282,7 @@ def generateModel(modelName="fit",
         #break
         
 
-    for observable in histSetDict.keys():
-        mcStack = ROOT.THStack()
-        mcStacks[observable]=mcStack
-        
-        obs=Observable(prefix+observable, binning, ranges)
-        for component in histSetDict[observable].keys():
-            compWeight = histSetDict[observable][component]["weight"]
-            
-            componentHist = ROOT.TH1F(component+"__"+observable+"_data","",binning,ranges[0],ranges[1])
-            componentHist.SetLineColor(histSetDict[observable][component]["color"])
-            componentHist.SetFillColor(histSetDict[observable][component]["color"])
-            componentHist.SetFillStyle(1001)
-            componentHist.SetDirectory(0)
-            for setName in histSetDict[observable][component]["sets"]:
-                files = setDict[setName]["files"]
-                weights = setDict[setName]["weights"]
-                setWeight =setDict[setName]["weight"]
-                for fileindex in range(len(files)):
-                    datafile=files[fileindex]
-                    weightfile=weights[fileindex]
-                    comp=ObservableComponent(component+"__"+observable+"__"+setName+"__"+str(fileindex))
-                    coeff=CoefficientMultiplyFunction()
-                    for uncertaintyName in histSetDict[observable][component]["uncertainties"]:
-                        dist = uncertaintyDict[uncertaintyName]["dist"]
-                        coeff.addDistribution(dist,dist.getParameterName())
-                    comp.setCoefficientFunction(coeff)
-                    
-                    hist=RootProjectedHistogram(observable+"__"+component+"__"+setName+"__"+str(fileindex),{"use_errors":"true"})
-                    hist.setFileName(datafile)
-                    hist.addFriend(weightfile)
-                    hist.setVariableString(varName)
-                    hist.setWeightString(setWeight+"*"+compWeight)
-                    hist.setTreeName("dataframe")
-                    hist.setBinning(binning)
-                    hist.setRange(ranges)
-                    file.write(hist.toConfigString())
-                    comp.setNominalHistogram(hist)
-                
-                    obs.addComponent(comp)
-                    
-                    
-                    f = ROOT.TFile(datafile)
-                    print observable,datafile
-                    print setWeight+"*"+compWeight
-                    tempHist = ROOT.TH1F(observable+"__"+component+"__"+setName+"__"+str(fileindex),"",binning,ranges[0],ranges[1])
-                    tree = f.Get("dataframe")
-                    tree.AddFriend("dataframe",weightfile)
-                    tree.Project(tempHist.GetName(),varName,setWeight+"*"+compWeight)
-                    tempHist.SetDirectory(0)
-                    componentHist.Add(tempHist)
-                #break
-            for ibin in range(binning):
-                componentHist.SetBinContent(ibin+1,max(0,componentHist.GetBinContent(ibin+1)))
-            mcStack.Add(componentHist,"HIST")
-
-            
-        model.addObservable(obs)
-        #break
+    
     
         
     
@@ -313,27 +290,7 @@ def generateModel(modelName="fit",
     file.write(model.toConfigString())
     _writeFile(file,model,modelName,dicePoisson=dicePoisson,mcUncertainty=mcUncertainty)
     file.close()
-    
-    
-    for observable in mcStacks.keys():
-        cv = ROOT.TCanvas("cv_"+observable,"",800,600)
-        ymax=max(mcStacks[observable].GetMaximum(),dataStacks[observable].GetMaximum())
-        axis=ROOT.TH2F("axis"+observable,";BDT_{W,t #bar t};events",50,ranges[0],ranges[1],50,0,ymax*1.15)
-        axis.Draw("AXIS")
-        mcStacks[observable].Draw("Same")
-        dataStacks[observable].Draw("Same")
-        pave = ROOT.TPaveText(0.5,0.91,0.9,0.99,"NDC")
-        pave.SetFillColor(ROOT.kWhite)
-        pave.SetTextFont(42)
-        pave.AddText(observable)
-        pave.Draw("Same")
-        axis.Draw("AXIS Same")
-        cv.Print(observable+".pdf")
-        cv.WaitPrimitive()
-        
-    
-    
-                    
+    '''
                     
 def _writeFile(file,model,modelName,dicePoisson=True,mcUncertainty=True,experiments=1): 
 
@@ -420,106 +377,3 @@ def _writeFile(file,model,modelName,dicePoisson=True,mcUncertainty=True,experime
     
     
 
-    
-
-if __name__=="__main__":
-    uncertaintyDict={
-        "other":{"type":"gauss","config":{"mean": "1.0", "width":"0.5", "range":"(0.0,\"inf\")"}},
-        "topbg":{"type":"gauss","config":{"mean": "1.0", "width":"2.0", "range":"(0.0,\"inf\")"}},
-        "tChan":{"type":"gauss","config":{"mean": "1.0", "width":"100.0", "range":"(0.0,\"inf\")"}},
-        "qcd":{"type":"gauss","config":{"mean": "1.0", "width":"2.0", "range":"(0.0,\"inf\")"}}
-        
-        #"other":{"type":"log_normal","config":{"mu": "0.0", "sigma":"2.0"}},
-        #"topbg":{"type":"log_normal","config":{"mu": "0.0", "sigma":"2.0"}},
-        #"tChan":{"type":"log_normal","config":{"mu": "0.0", "sigma":"2.0"}}
-     
-    }
-    
-    categories = {
-        "2j1t": {
-            #"weight":"1",
-            "weight":"(n_signal_mu==1)*(n_signal_ele==0)*(n_veto_mu==0)*(n_veto_ele==0)*(hlt_mu==1)*(ljet_dr>0.3)*(bjet_dr>0.3)*(njets==2)*(ntags==1)*(bdt_qcd>-0.15)"
-        },
-        #"2j0t": {
-        #    "weight":"(n_signal_mu==1)*(n_signal_ele==0)*(n_veto_mu==0)*(n_veto_ele==0)*(hlt_mu==1)*(njets==2)*(ntags==0)*(bdt_qcd2>0.4)"
-        #},
-        #"3j1t": {
-        #    "weight":"(n_signal_mu==1)*(n_signal_ele==0)*(n_veto_mu==0)*(n_veto_ele==0)*(hlt_mu==1)*(njets==3)*(ntags==1)*(bdt_qcd2>0.4)"
-        #},
-        "3j2t": {
-            #"weight":"1",
-            "weight":"(n_signal_mu==1)*(n_signal_ele==0)*(n_veto_mu==0)*(n_veto_ele==0)*(hlt_mu==1)*(ljet_dr>0.3)*(bjet_dr>0.3)*(njets==3)*(ntags==2)*(bdt_qcd>-0.15)"
-        },
-    }
-    templateMCSetDict={
-        "other":
-        {
-            "sets":["DY","DiBoson","WJetsExclLF","WJetsExclCF","WJetsExclBF"],
-            "uncertainties":["other"],
-            "weight":"pu_weight*b_weight*lepton_weight__id*lepton_weight__trigger*lepton_weight__iso*xsweight*19700",
-            "color":ROOT.kGreen+1
-        },
-        "topbg":
-        {
-            "sets":["sChan","tWChan","TTJetsSemi","TTJetsDi"],
-            "uncertainties":["topbg"],
-            "weight":"pu_weight*b_weight*lepton_weight__id*lepton_weight__trigger*lepton_weight__iso*xsweight*19700",
-            "color":ROOT.kOrange
-        },
-        "tChan":
-        {
-            "sets":["tChanLeptons"],
-            "uncertainties":["tChan"],
-            "weight":"pu_weight*b_weight*lepton_weight__id*lepton_weight__trigger*lepton_weight__iso*xsweight*19700",
-            "color":ROOT.kMagenta
-        },
-        "QCD":
-        {
-            "sets":["QCDMu","DYAntiiso","DiBosonAntiiso","WJetsExclLFAntiiso","WJetsExclCFAntiiso","WJetsExclBFAntiiso","sChanAntiiso","tWChanAntiiso","TTJetsSemiAntiiso","TTJetsDiAntiiso","tChanLeptonsAntiiso"],
-            "uncertainties":["qcd"],
-            "weight":"1",
-            "color":ROOT.kGray+1
-        }
-    }
-    templateDATASetDict = {
-        "data":
-        {
-            "sets":["SingleMu"],
-            "weight":"1"
-        }
-    }
-
-    dataSetDict={}
-    histSetDict={}
-    
-    for category in categories.keys():
-        dataSetDict[category]={}
-        histSetDict[category]={}
-        categoryWeight=categories[category]["weight"]
-        for componentName in templateDATASetDict.keys():
-            
-            dataSetDict[category][componentName]=copy.copy(templateDATASetDict[componentName])
-            dataSetDict[category][componentName]["weight"]+="*"+categoryWeight
-            #print category,componentName
-            #print dataSetDict[category][componentName]
-            #print
-        for componentName in templateMCSetDict.keys():
-            histSetDict[category][componentName]=copy.copy(templateMCSetDict[componentName])
-            histSetDict[category][componentName]["weight"]+="*"+categoryWeight
-            #print category,componentName
-            #print histSetDict[category][componentName]
-            #print
-       
-     
-    generateModel(modelName="fit",
-                    prefix="",
-                    dataDict=dataSetDict,
-                    histSetDict=histSetDict,
-                    uncertaintyDict=uncertaintyDict,
-                    binning=30,
-                    ranges=[-1.0,1.0],
-                    dicePoisson=True,
-                    mcUncertainty=True)
-                
-    
-    

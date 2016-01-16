@@ -28,3 +28,8 @@ add_library(libtheta SHARED
 )
 target_link_libraries(libtheta m dl libconfig ${Boost_LIBRARIES})
 
+install(
+    TARGETS libtheta
+    RUNTIME DESTINATION bin
+    LIBRARY DESTINATION lib
+)

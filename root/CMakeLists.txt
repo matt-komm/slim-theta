@@ -9,4 +9,8 @@ add_library(root-plugin MODULE
 
 target_link_libraries(root-plugin libtheta ${Boost_LIBRARIES} ${ROOT_LIBRARIES} -lMinuit2 -lMinuit)
 
-
+install(
+    TARGETS root-plugin
+    RUNTIME DESTINATION bin
+    LIBRARY DESTINATION lib
+)

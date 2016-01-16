@@ -9,4 +9,8 @@ add_library(libconfig SHARED
     strbuf.c
 )
 
-
+install(
+    TARGETS libconfig
+    RUNTIME DESTINATION bin
+    LIBRARY DESTINATION lib
+)

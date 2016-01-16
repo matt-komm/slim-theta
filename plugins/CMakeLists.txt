@@ -50,4 +50,8 @@ add_library(plugins MODULE
 
 target_link_libraries(plugins libtheta ${Sqlite_LIBRARIES} ${Boost_LIBRARIES})
 
-
+install(
+    TARGETS plugins
+    RUNTIME DESTINATION bin
+    LIBRARY DESTINATION lib
+)
