@@ -419,6 +419,7 @@ private:
     theta::ParValues parameters_for_nll;
     
     bool save_nll;
+    bool fixed_parameters;
     theta::Column c_nll;
     
     theta::ParIds par_ids;

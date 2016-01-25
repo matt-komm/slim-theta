@@ -501,7 +501,7 @@ const std::pair<double, double> & product_distribution::support(const ParId & p)
     return distributions[it->second].support(p);
 }
 
-model_source::model_source(const theta::Configuration & cfg): DataSource(cfg), RandomConsumer(cfg, get_name()), save_nll(false), dice_poisson(true),
+model_source::model_source(const theta::Configuration & cfg): DataSource(cfg), RandomConsumer(cfg, get_name()), save_nll(false), fixed_parameters(false), dice_poisson(true),
   dice_template_uncertainties(true), dice_rvobs(true){
     model = PluginManager<Model>::build(Configuration(cfg, cfg.setting["model"]));
     par_ids = model->get_parameters();
@@ -519,7 +519,7 @@ model_source::model_source(const theta::Configuration & cfg): DataSource(cfg), R
         dice_template_uncertainties = cfg.setting["dice_template_uncertainties"];
     }
     if(cfg.setting.exists("parameters-for-nll")){
-        save_nll = true;
+        fixed_parameters = true;
         const size_t n = cfg.setting["parameters-for-nll"].size();
         ParIds pids_for_nll;
         for(size_t i=0; i<n; ++i){
@@ -561,6 +561,13 @@ void model_source::fill(Data & dat){
     else{
         model->get_parameter_distribution().sample(values, rnd);
     }
+
+    // fix parameters if specified
+    if(fixed_parameters){
+       values.set(parameters_for_nll);
+    }
+    
+    // fill parameters into db
     size_t i=0;
     for(ParIds::const_iterator p_it=par_ids.begin(); p_it!=par_ids.end(); ++p_it, ++i){
         products_sink->set_product(parameter_columns[i], values.get(*p_it));

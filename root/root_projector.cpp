@@ -83,6 +83,12 @@ root_projector::root_projector(const Configuration & ctx){
         cv.Print(printName.c_str());
     }
     
+    if (ctx.setting.exists("scale"))
+    {
+        double scale = ctx.setting["scale"];
+        hist->Scale(scale);
+    }
+
     if(ctx.setting.exists("normalize_to")){
        double norm = ctx.setting["normalize_to"];
        double hist_integral = hist->Integral();

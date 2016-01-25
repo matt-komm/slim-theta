@@ -3,6 +3,8 @@
 #include "plugins/histogram_add.hpp"
 #include "interface/histogram-with-uncertainties.hpp"
 
+#include <random>
+
 using namespace theta;
 using namespace std;
 
@@ -23,6 +25,27 @@ histogram_add::histogram_add(const Configuration & ctx){
         }
         subHist->add_with_coeff_to(h,1.0,pv);
     }
+    if (ctx.setting.exists("dice_stat"))
+    {
+        bool dicing = ctx.setting["dice_stat"];
+        if (dicing)
+        {
+            std::default_random_engine generator;
+            for (int ibin = 0; ibin< h.get_nbins(); ++ibin)
+            {
+                if (h.get(ibin)>0)
+                {
+                    std::poisson_distribution<int> distribution(h.get(ibin));
+                    int diced = distribution(generator);
+                    h.set(ibin,
+                        diced,
+                        std::sqrt(diced)
+                    );
+                }
+            }
+        }
+    }
+    
     set_histo(h);
 }
 

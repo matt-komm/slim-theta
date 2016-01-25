@@ -425,13 +425,21 @@ class RootProjectedHistogram(THETAObject):
                 retStr+=self._indent(key+" = ("+str(self._configDict[key][0])+","+str(self._configDict[key][1])+");", indentLevel+1)
             elif key=="use_errors":
                 retStr+=self._indent(key+" = "+self._configDict[key]+";", indentLevel+1)
+            elif key=="weight":
+                retStr+=self._indent(key+" = \""+self._configDict[key]+"\";", indentLevel+1)
+            elif key=="tree":
+                retStr+=self._indent(key+" = \""+self._configDict[key]+"\";", indentLevel+1)
+            elif key=="variable":
+                retStr+=self._indent(key+" = \""+self._configDict[key]+"\";", indentLevel+1)
+            elif key=="filename":
+                retStr+=self._indent(key+" = \""+self._configDict[key]+"\";", indentLevel+1)
             elif key=="friends":
                 fstr =""
                 for f in self._configDict['friends']:
                     fstr+='"'+f+'",'
                 retStr+=self._indent(key+" = ("+fstr[0:-1]+");", indentLevel+1)
             else:
-                retStr+=self._indent(key+" = \""+str(self._configDict[key])+"\";", indentLevel+1)
+                retStr+=self._indent(key+" = "+str(self._configDict[key])+";", indentLevel+1)
         retStr+=self._indent("zerobin_fillfactor = 0.0001;", indentLevel+1)
         retStr+=self._indent("};", indentLevel)
         return retStr
@@ -466,7 +474,7 @@ class RootHistogram(THETAObject):
             elif key=="normalize_to":
                 retStr+=self._indent(key+" = "+str(self._configDict[key])+";", indentLevel+1)
             else:
-                retStr+=self._indent(key+" = \""+str(self._configDict[key])+"\";", indentLevel+1)
+                retStr+=self._indent(key+" = "+str(self._configDict[key])+";", indentLevel+1)
         retStr+=self._indent("zerobin_fillfactor = 0.0001;", indentLevel+1)
         retStr+=self._indent("};", indentLevel)
         return retStr
@@ -497,7 +505,7 @@ class HistoAdd(THETAObject):
                     srcString+='"@'+srcname+'",'
                 retStr+=self._indent(key+" = ("+srcString[0:-1]+");", indentLevel+1)
             else:
-                retStr+=self._indent(key+" = \""+str(self._configDict[key])+"\";", indentLevel+1)
+                retStr+=self._indent(key+" = "+str(self._configDict[key])+";", indentLevel+1)
         retStr+=self._indent("};", indentLevel)
         return retStr
 
