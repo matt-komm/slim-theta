@@ -527,7 +527,7 @@ model_source::model_source(const theta::Configuration & cfg): DataSource(cfg), R
             ParId pid = vm->get_par_id(pname);
             pids_for_nll.insert(pid);
             if(cfg.setting["parameters-for-nll"][i].get_type() == Setting::TypeFloat){
-                double value = cfg.setting;
+                double value = cfg.setting["parameters-for-nll"][i];
                 parameters_for_nll.set(pid, value);
             }
             else{
