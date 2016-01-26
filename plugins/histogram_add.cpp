@@ -30,7 +30,12 @@ histogram_add::histogram_add(const Configuration & ctx){
         bool dicing = ctx.setting["dice_stat"];
         if (dicing)
         {
-            std::default_random_engine generator;
+            int seed = 123;
+            if (ctx.setting.exists("rnd"))
+            {
+                seed= ctx.setting["rnd"];
+            }
+            std::default_random_engine generator(seed);
             for (int ibin = 0; ibin< h.get_nbins(); ++ibin)
             {
                 if (h.get(ibin)>0)
