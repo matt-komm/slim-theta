@@ -72,9 +72,9 @@ root_projector::root_projector(const Configuration & ctx){
             tree->AddFriend(treeName.c_str(),friendname.c_str());
         }
     }
-    theta::out<<"projecting ... "<<filename.c_str();
+    
     tree->Project(hist->GetName(),varStr.c_str(),weightStr.c_str());
-    theta::out<<" = "<<hist->GetEntries()<<" events, integral = "<<hist->Integral() << std::endl;
+    
     if (ctx.setting.exists("print"))
     {
         TCanvas cv(("cv_"+histNameStream.str()).c_str(),"",800,600);
@@ -148,32 +148,45 @@ root_projector::root_projector(const Configuration & ctx){
         h.set(i - bin_low, content, unc);
     }
     
-    
-    
     //apply zerobin_fillfactor:
+    bool allowNegativeValues = true;
+    if (ctx.setting.exists("allow_negative"))
+    {
+        allowNegativeValues = ctx.setting["allow_negative"];
+    }
+    double integral = 0.0;
+    for(size_t i=0; i<h.get_nbins(); ++i){
+        integral += h.get_value(i);
+    }
     double zerobin_fillfactor = 0.0;
     if(ctx.setting.exists("zerobin_fillfactor")){
         zerobin_fillfactor = ctx.setting["zerobin_fillfactor"];
         if(zerobin_fillfactor < 0){
            throw ConfigurationException("zerobin_fillfactor must be >= 0.0!");
         }
-        double integral = 0.0;
-        for(size_t i=0; i<h.get_nbins(); ++i){
-            integral += h.get_value(i);
-        }
+        
+        
         // the minimum value to set all histogram bin to:
-        const double min_val = integral * zerobin_fillfactor / h.get_nbins();
-        for(size_t i=0; i<h.get_nbins(); ++i){
+        const double min_absval = fabs(integral) * zerobin_fillfactor / h.get_nbins();
+        for(size_t i=0; i<h.get_nbins(); ++i)
+        {
             double unc = h.get_uncertainty(i);
             double val = h.get_value(i);
-            // set uncertainty to (at least) the difference of new and old value, if we have fill the histogram
-            if(val < min_val){
-                unc = max(unc, min_val - val);
-                val = min_val;
+            // if close to 0 set to min_val; if val<0 do the same
+            if((fabs(val) < min_absval) or ((not allowNegativeValues) and (val<0)))
+            {
+                h.set(i, min_absval, max(unc, min_absval - fabs(val)));
             }
-            h.set(i, val, unc);
         }
     }
+    integral = 0.0;
+    for(size_t i=0; i<h.get_nbins(); ++i){
+        integral += h.get_value(i);
+    }
+    
+    theta::out<<"projected ... "<<filename.c_str();
+    theta::out<<" = "<<hist->GetEntries()<<" events, integral = "<<integral<< std::endl;
+    
     set_histo(h);
 }
 
