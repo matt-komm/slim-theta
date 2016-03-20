@@ -37,7 +37,7 @@ root_projector::root_projector(const Configuration & ctx){
         throw ConfigurationException(s.str());
     }
     
-    bool use_errors = false;
+    bool use_errors = true;
     if(ctx.setting.exists("use_errors")){
          use_errors = ctx.setting["use_errors"];
     }
@@ -47,6 +47,7 @@ root_projector::root_projector(const Configuration & ctx){
 
     TFile file(filename.c_str(), "r");
     TH1D* hist = new TH1D(histNameStream.str().c_str(),"",nbins,range_low,range_high);
+    hist->Sumw2();
     if(file.IsZombie()){
         stringstream s;
         s << "Could not open file '" << filename << "'";

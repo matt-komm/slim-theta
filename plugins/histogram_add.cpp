@@ -20,7 +20,6 @@ histogram_add::histogram_add(const Configuration & ctx){
         std::auto_ptr<HistogramFunction> subHist = PluginManager<HistogramFunction>::build(histConf);
         if (ihist==0)
         {
-            
             subHist->get_histogram_dimensions(nbins, xmin, xmax);
             h = Histogram1DWithUncertainties(nbins, xmin, xmax);
         }
@@ -57,33 +56,37 @@ histogram_add::histogram_add(const Configuration & ctx){
     {
         allowNegativeValues = ctx.setting["allow_negative"];
     }
-    double zerobin_fillfactor = 0.0;
+    double zerobin_fillfactor = 0.000000001;
     double integral = 0.0;
     for(size_t i=0; i<h.get_nbins(); ++i){
         integral += h.get_value(i);
     }
-    if(ctx.setting.exists("zerobin_fillfactor")){
+    if(ctx.setting.exists("zerobin_fillfactor"))
+    {
         zerobin_fillfactor = ctx.setting["zerobin_fillfactor"];
-        if(zerobin_fillfactor < 0){
-           throw ConfigurationException("zerobin_fillfactor must be >= 0.0!");
-        }
-        
-        
-        // the minimum value to set all histogram bin to:
-        const double min_absval = fabs(integral) * zerobin_fillfactor / h.get_nbins();
-        for(size_t i=0; i<h.get_nbins(); ++i)
-        {
-            double unc = h.get_uncertainty(i);
-            double val = h.get_value(i);
-            // if close to 0 set to min_val; if val<0 do the same
-            if((fabs(val) < min_absval) or ((not allowNegativeValues) and (val<0)))
-            {
-                h.set(i, min_absval, max(unc, min_absval - fabs(val)));
-            }
-        } 
     }
+    if(zerobin_fillfactor < 0)
+    {
+       throw ConfigurationException("zerobin_fillfactor must be >= 0.0!");
+    }
+    
+    
+    // the minimum value to set all histogram bin to:
+    const double min_absval = fabs(integral) * zerobin_fillfactor / h.get_nbins();
+    for(size_t i=0; i<h.get_nbins(); ++i)
+    {
+        double unc = h.get_uncertainty(i);
+        double val = h.get_value(i);
+        // if close to 0 set to min_val; if val<0 do the same
+        if((fabs(val) < min_absval) or ((not allowNegativeValues) and (val<0)))
+        {
+            h.set(i, min_absval, max(unc, min_absval - fabs(val)));
+        }
+    } 
+    
     integral = 0.0;
-    for(size_t i=0; i<h.get_nbins(); ++i){
+    for(size_t i=0; i<h.get_nbins(); ++i)
+    {
         integral += h.get_value(i);
     }
     theta::out<<"-----------------------------"<< std::endl;
