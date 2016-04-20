@@ -474,7 +474,7 @@ class RootHistogram(THETAObject):
             elif key=="normalize_to":
                 retStr+=self._indent(key+" = "+str(self._configDict[key])+";", indentLevel+1)
             else:
-                retStr+=self._indent(key+" = "+str(self._configDict[key])+";", indentLevel+1)
+                retStr+=self._indent(key+" = \""+str(self._configDict[key])+"\";", indentLevel+1)
         #retStr+=self._indent("zerobin_fillfactor = 0.0001;", indentLevel+1)
         retStr+=self._indent("};", indentLevel)
         return retStr
