@@ -51,6 +51,10 @@ root_histogram::root_histogram(const Configuration & ctx){
            histo->Scale(norm / histo_integral);
        }
     }
+    if(ctx.setting.exists("scale")){
+       double scale = ctx.setting["scale"];
+       histo->Scale(scale);
+    }
 
     Histogram1DWithUncertainties h;
     //take care of 1D histograms:

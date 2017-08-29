@@ -12,6 +12,7 @@
  * type = "root_histogram";
  * filename = "path/to/file.root";
  * histoname = "histoname-in-file";
+ * scale = 1.0; //optional; scale histogram
  * normalize_to = 1.0; //optional; default is not to scale th histogram
  * use_errors = true; // optional; default is false
  * rebin = 2; // optional; default is 1.
