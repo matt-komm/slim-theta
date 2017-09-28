@@ -228,7 +228,7 @@ boost::shared_ptr<Main> build_main(string cfg_filename, bool nowarn, bool print_
 
 
 int main(int argc, char** argv) {
-    redirect_stdio();
+    //redirect_stdio();
     fill_theta_dir(argv);
     if(theta_dir==""){
         theta::err << "WARNING: could not determine theta_dir, leaving empty" << endl;

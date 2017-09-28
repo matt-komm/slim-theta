@@ -462,6 +462,9 @@ class RootHistogram(THETAObject):
         
     def setNorm(self,norm=1.0):
         self._configDict['normalize_to']=norm
+        
+    def setScale(self,scale=1.0):
+        self._configDict['scale']=scale
     
     def toConfigString(self, indentLevel=0):
         retStr=self._indent(self.varname+" = {", indentLevel)
@@ -472,6 +475,8 @@ class RootHistogram(THETAObject):
             elif key=="use_errors":
                 retStr+=self._indent(key+" = "+str(self._configDict[key])+";", indentLevel+1)
             elif key=="normalize_to":
+                retStr+=self._indent(key+" = "+str(self._configDict[key])+";", indentLevel+1)
+            elif key=="scale":
                 retStr+=self._indent(key+" = "+str(self._configDict[key])+";", indentLevel+1)
             else:
                 retStr+=self._indent(key+" = \""+str(self._configDict[key])+"\";", indentLevel+1)
