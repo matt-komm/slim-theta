@@ -61,9 +61,12 @@ void cubiclinear_histomorph::add_morph_terms(HT & t, const ParValues & values) c
     _mm_storeu_pd(sa, sum);
     h_sum = sa[0] + sa[1];
 #endif
+    //NOTE: now normalizing already the input histograms
+    /*
     if(normalize_to_nominal && h_sum > 0.0){
        t *= h0_sum / h_sum;
     }
+    */
 }
 
 void cubiclinear_histomorph::add_with_coeff_to(Histogram1DWithUncertainties & hres, double coeff, const ParValues & values) const{
@@ -216,6 +219,8 @@ void cubiclinear_histomorph::get_histogram_dimensions(size_t & nbins, double & x
     xmax = h0.get_xmax();
 }
 
+#include <iostream>
+
 cubiclinear_histomorph::cubiclinear_histomorph(const Configuration & ctx): normalize_to_nominal(false) {
     boost::shared_ptr<VarIdManager> vm = ctx.pm->get<VarIdManager>();
     //build nominal histogram:
@@ -236,14 +241,26 @@ cubiclinear_histomorph::cubiclinear_histomorph(const Configuration & ctx): norma
         string setting_name;
         //plus:
         setting_name = par_name + "-plus-histogram";
-        hplus_diff.push_back(get_constant_histogram(Configuration(ctx, ctx.setting[setting_name])).get_values_histogram());
+        theta::Histogram1D hplus = get_constant_histogram(Configuration(ctx, ctx.setting[setting_name])).get_values_histogram();
+        if (normalize_to_nominal)
+        {
+            hplus*=h0.get_sum()/hplus.get_sum();
+        }
+        hplus_diff.push_back(hplus);
         hplus_diff.back().check_compatibility(h0);
         hplus_diff.back().add_with_coeff(-1.0, h0);
         //minus:
         setting_name = par_name + "-minus-histogram";
-        hminus_diff.push_back(get_constant_histogram(Configuration(ctx, ctx.setting[setting_name])).get_values_histogram());
+        theta::Histogram1D hminus = get_constant_histogram(Configuration(ctx, ctx.setting[setting_name])).get_values_histogram();
+        if (normalize_to_nominal)
+        {
+            hminus*=h0.get_sum()/hminus.get_sum();
+        }
+        hminus_diff.push_back(hminus);
         hminus_diff.back().check_compatibility(h0);
         hminus_diff.back().add_with_coeff(-1.0, h0);
+        
+        //std::cout<<"name: "<<par_name<<", sum: "<<h0.get_sum()<<", plus: "<<hplus.get_sum()<<", minus: "<<hminus.get_sum()<<std::endl;
         
         sum.push_back(hplus_diff.back());
         sum.back() += hminus_diff.back();

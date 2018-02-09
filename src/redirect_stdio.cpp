@@ -11,7 +11,7 @@ boost::iostreams::stream<boost::iostreams::file_descriptor_sink> theta::out(boos
 boost::iostreams::stream<boost::iostreams::file_descriptor_sink> theta::err(boost::iostreams::file_descriptor_sink(2, boost::iostreams::never_close_handle));
 
 void theta::redirect_stdio(){
-    static bool already_replaced = false;
+    static bool already_replaced = true;
     if(!already_replaced){
         theta::out_fd = dup(1);
         theta::out.close();
