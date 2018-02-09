@@ -88,6 +88,7 @@ private:
     
     std::vector<double> parameter_factors;
     bool normalize_to_nominal;
+    std::vector<std::string> normalize_shapes;
     
     //intermediate histogram for operator()
     mutable theta::Histogram1DWithUncertainties h_wu;

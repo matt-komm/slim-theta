@@ -229,6 +229,13 @@ cubiclinear_histomorph::cubiclinear_histomorph(const Configuration & ctx): norma
     if(ctx.setting.exists("normalize_to_nominal")){
         normalize_to_nominal = ctx.setting["normalize_to_nominal"];
     }
+    if(ctx.setting.exists("normalize_shapes")){
+        for (size_t i = 0; i < ctx.setting["normalize_shapes"].size(); ++i)
+        {
+            normalize_shapes.push_back(ctx.setting["normalize_shapes"][i]);
+        }
+    }
+    
     Setting psetting = ctx.setting["parameters"];
     size_t n = psetting.size();
     parameter_factors.resize(n, 1.0);
@@ -242,7 +249,7 @@ cubiclinear_histomorph::cubiclinear_histomorph(const Configuration & ctx): norma
         //plus:
         setting_name = par_name + "-plus-histogram";
         theta::Histogram1D hplus = get_constant_histogram(Configuration(ctx, ctx.setting[setting_name])).get_values_histogram();
-        if (normalize_to_nominal)
+        if (std::find(normalize_shapes.begin(),normalize_shapes.end(),par_name)!=normalize_shapes.end())
         {
             hplus*=h0.get_sum()/hplus.get_sum();
         }
@@ -252,7 +259,7 @@ cubiclinear_histomorph::cubiclinear_histomorph(const Configuration & ctx): norma
         //minus:
         setting_name = par_name + "-minus-histogram";
         theta::Histogram1D hminus = get_constant_histogram(Configuration(ctx, ctx.setting[setting_name])).get_values_histogram();
-        if (normalize_to_nominal)
+        if (std::find(normalize_shapes.begin(),normalize_shapes.end(),par_name)!=normalize_shapes.end())
         {
             hminus*=h0.get_sum()/hminus.get_sum();
         }

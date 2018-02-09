@@ -132,6 +132,7 @@ class ObservableComponent(THETAObject):
         self._coefficientFunction=CoefficientMultiplyFunction()
         self._histogramParameterDistributions=[]
         self._parameters=[]
+        self._normShapes=[]
         
     def getParameterDistributions(self):
         list=self._coefficientFunction.getDistributions()+self._histogramParameterDistributions
@@ -149,17 +150,26 @@ class ObservableComponent(THETAObject):
         self._histogramParameterDistributions.append(distribution)
         self._parameters.append(parameter)
         
+    def addShapeNorm(self,name):
+        self._normShapes.append(name)
+        
     def toConfigString(self, indentLevel=0):
         histoParameters=""
+        normShapeParameters=""
         for cnt in range(len(self._histogramParameterDistributions)):
             histoParameters+="\""+self._histogramParameterDistributions[cnt].getParameterName(self._parameters[cnt])+"\","
         histoParameters=histoParameters[:-1] #remove last comma
+        
+        for cnt in range(len(self._normShapes)):
+            normShapeParameters+="\""+self._normShapes[cnt]+"\","
+        normShapeParameters=normShapeParameters[:-1] #remove last comma
         
         retStr=self._indent(self.varname+" = {", indentLevel)
         retStr+=self._coefficientFunction.toConfigString(indentLevel+1)
         retStr+=self._indent("histogram = {", indentLevel+1)
         retStr+=self._indent("type = \"cubiclinear_histomorph\";", indentLevel+2)
         retStr+=self._indent("parameters = ("+histoParameters+");", indentLevel+2)
+        retStr+=self._indent("normalize_shapes = ("+normShapeParameters+");", indentLevel+2)
         for histoKey in self._histograms.keys():
             retStr+=self._indent(histoKey+" = \"@"+self._histograms[histoKey].varname+"\";", indentLevel+2)
         retStr+=self._indent("};", indentLevel+1)
