@@ -250,7 +250,7 @@ double newton_internal::f_accuracy(const RangedFunction & f, const vector<double
     theta_assert(f.ndim() == x0.size());
     vector<double> x(x0);
     size_t f_eval = 0;
-    theta_assert(f.trunc_to_range(x) == 0);
+    //theta_assert(f.trunc_to_range(x) == 0);
     const double f0 = fabs(f(x)) + f_scale;
     ++f_eval;
     double h = numeric_limits<double>::epsilon() * fabs(f0);
