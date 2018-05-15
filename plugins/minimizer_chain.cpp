@@ -1,6 +1,7 @@
 #include "plugins/minimizer_chain.hpp"
 #include "interface/plugin.hpp"
 #include "interface/phys.hpp"
+#include "interface/redirect_stdio.hpp"
 
 using namespace theta;
 using namespace std;
@@ -11,18 +12,19 @@ MinimizationResult minimizer_chain::minimize(const Function & f, const ParValues
     bool success = false;
     for(size_t i=0; i < minimizers.size(); ++i){
         try{
+            out<<"Trying minimizer: "<<(i+1);
             res = minimizers[i].minimize(f, start, step, ranges);
             success = true;
+            out<<" success!"<<std::endl;
         }
         catch(MinimizationException & ex){
+            out<<" FAILED! (MinimizationException: "<<ex.what()<<")"<<std::endl;
             // if this was the last attempt: re-throw, otherwise silently ignore and try the next minimizer ...
             if(i+1==minimizers.size()) throw;
         }
         catch(std::logic_error & ex){
-            stringstream ss;
-            ss << ex.what();
-            ss << " (in minimizer_chain, minimizer " << i << ")";
-            throw logic_error(ss.str());
+            out<<" FAILED! (LogicError: "<<ex.what()<<")"<<std::endl;
+            if(i+1==minimizers.size()) throw;
         }
         if(success) break;
     }
@@ -38,7 +40,19 @@ MinimizationResult minimizer_chain::minimize(const Function & f, const ParValues
                 }
             }
         }
-        res = last_minimizer->minimize(f, res.values, step2, ranges);
+        try{
+            out<<"Running last minimizer: ";
+            res = last_minimizer->minimize(f, res.values, step2, ranges);
+            out<<" success!"<<std::endl;
+        }
+        catch(MinimizationException & ex){
+            out<<" FAILED! (MinimizationException: "<<ex.what()<<")"<<std::endl;
+            throw;
+        }
+        catch(std::logic_error & ex){
+            out<<" FAILED! (LogicError: "<<ex.what()<<")"<<std::endl;
+            throw;
+        }
     }
     return res;
 }

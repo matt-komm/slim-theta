@@ -244,50 +244,71 @@ void newton_internal::find_argmin(const f1d & f, min_triplet & tr, const fpropos
 }
 
 
-double newton_internal::f_accuracy(const RangedFunction & f, const vector<double> & x0, size_t i, double f_scale){
+double newton_internal::f_accuracy(const RangedFunction & f, const vector<double> & xorig, size_t i, double f_scale){
     theta_assert(f_scale > 0.0);
-    theta_assert(i < x0.size());
-    theta_assert(f.ndim() == x0.size());
+    theta_assert(i < xorig.size());
+    theta_assert(f.ndim() == xorig.size());
+    vector<double> x0(xorig);
+    if (f.trunc_to_range(x0)>0)
+    {
+        //move a bit away from border
+        double move = 2*numeric_limits<double>::epsilon();
+        for (size_t t =0; t<8 and (f.trunc_to_range(x0)>0); ++t)
+        {
+            x0[i]+=move;
+            move=-2*move;
+        }
+    }
     vector<double> x(x0);
     size_t f_eval = 0;
     //theta_assert(f.trunc_to_range(x) == 0);
-    const double f0 = fabs(f(x)) + f_scale;
+    double f0 = fabs(f(x)) + f_scale;
     ++f_eval;
-    double h = numeric_limits<double>::epsilon() * fabs(f0);
+    double h = numeric_limits<double>::epsilon()*f0;
     x[i] = x0[i] + h;
+    
     if(f.trunc_to_range(x) > 0){
         h = -h;
         x[i] = x0[i] + h;
         if(f.trunc_to_range(x) > 0) throw invalid_argument("f_accuracy: parameter range to small");
     }
+    
     double f1 = fabs(f(x)) + f_scale;
     ++f_eval;
     // two cases: either f0==f1, then we have to increase h, or f0!=f1, then we have to decrease h:
-    bool increase_h = f0 == f1;    
+    bool increase_h = fabs(f0 - f1)<numeric_limits<double>::epsilon();    
     double f_eps = increase_h ? numeric_limits<double>::infinity() : fabs(f1 - f0);
     for(int j=0; j<1025; ++j){ // 2**+-1024 = double_max / double_min
         if(increase_h) h *= 2;
         else h /= 2;
         x[i] = x0[i] + h;
+        
+        
         if(f.trunc_to_range(x) > 0){
-            throw invalid_argument("f_accuracy: parameter range to small");
+            throw invalid_argument("f_accuracy: parameter range to small during accuracy search");
         }
-        double f1 = fabs(f(x)) + f_scale;
+        f0 = fabs(f(x0)) + f_scale;
+        f1 = fabs(f(x)) + f_scale;
+        //out<<j<<": "<<x[i]<<", x0="<<x0[i]<<", dx="<<(x[i]-x0[i])<<", h="<<h<<", f0="<<f0<<", f1="<<f1<<", d="<<(f1-f0)<<", inc="<<increase_h<<std::endl;
         ++f_eval;
-        if(f1 != f0){
+        if(fabs(f0 - f1)>=numeric_limits<double>::epsilon()){
             f_eps = min(f_eps, fabs(f1 - f0));
             // in increasing mode, this is the first non-zero difference, and we are done:
             if(increase_h){
+                //out<<"found f_eps: "<<f_eps<<std::endl;
                 return f_eps;
             }
         }
         else{
             // if in decresing mode, this is the first zero difference, and we are done:
             if(!increase_h){
+                //out<<"found f_eps: "<<f_eps<<std::endl;
                 return f_eps;
             }
         }
     }
+    
+    ///return numeric_limits<double>::epsilon()* fabs(f0);
     throw logic_error("too many iterations to find f_eps (f constant?)");
 }
 

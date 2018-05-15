@@ -264,6 +264,7 @@ newton_minimizer::newton_minimizer(const Configuration & cfg): use_nll_der(false
 
 
 MinimizationResult newton_minimizer::minimize2(const theta::Function & f_, const theta::FunctionInfo & info_, const theta::ParValues & fixed_parameters){
+    //out<<"starting minimization ..."<<std::endl;
     const NewtonFunctionInfo & info = dynamic_cast<const NewtonFunctionInfo &>(info_);
     RangedThetaFunction f(f_, fixed_parameters, info.get_step(), info.get_ranges(), use_nll_der);
     f.set_epsilon_f(info.get_epsilon_f());
@@ -300,6 +301,7 @@ MinimizationResult newton_minimizer::minimize2(const theta::Function & f_, const
     ParValues pv_start = info.get_start();
     pv_start.set(fixed_parameters);
     pv_start.fill(&x[0], nonfixed_pids);
+    //out<<"evaluating ..."<<std::endl;
     double fx = f.eval_with_derivative(x, grad);
     int it = 0;
     for(; it < opts.maxit; ++it){
@@ -447,10 +449,10 @@ MinimizationResult newton_minimizer::minimize2(const theta::Function & f_, const
             min_ = min(min_, hessian(i,i));
             max_ = max(max_, hessian(i,i));
         }
+        double desired_min = numeric_limits<double>::epsilon() * fabs(max_);
         if(opts.force_cov_positive){
             // min is the smallest eigenvalue of inverse_hessian. If it is negative (or positive but very small), add a small
             // value to make it > sqrt(eps) * max:
-            double desired_min = sqrt(numeric_limits<double>::epsilon()) * fabs(max_);
             if(min_ < desired_min){
                 if(opts.debug){
                     out << "hesse not positive definite; hesse = " << hessian << endl;
@@ -461,16 +463,23 @@ MinimizationResult newton_minimizer::minimize2(const theta::Function & f_, const
                 }    
             }
         }
-        try{
-            hessian.invert_cholesky();
-            cov = hessian;
+        for (size_t t = 0; t < 11; ++t)
+        {
+            try{
+                hessian.invert_cholesky();
+                cov = hessian;
+                break;
+            }
+            catch(range_error & re){
+                stringstream s;
+                s << "error inverting matrix to calculate covariance matrix: " << re.what();
+                if (t>9) throw MinimizationException(s.str());
+            }
+            for(size_t i=0; i<n; ++i)
+            {
+                hessian(i,i) += desired_min - min_;
+            } 
         }
-        catch(range_error & re){
-            stringstream s;
-            s << "error inverting matrix to calculate covariance matrix: " << re.what();
-            throw MinimizationException(s.str());
-        }
-        
     }
     MinimizationResult res;
     res.fval = fx;
@@ -514,6 +523,13 @@ MinimizationResult newton_minimizer::minimize(const theta::Function & f_, const 
     // get epsilon_f:
     vector<double> x0(f.ndim());
     start.fill(&x0[0], f.get_nonfixed_parameters());
+    /*vector<double> x0_clipped(x0);
+    out<<"clipping: "<<f.trunc_to_range(x0_clipped)<<std::endl;
+    for (size_t i = 0; i < x0.size(); ++i)
+    {
+        out<<"parameter "<<i<<": value="<<x0[i]<<" -> "<<x0_clipped[i]<<std::endl;
+    }
+    */
     double epsilon_f = f_accuracy(f, x0, 0);
     if(opts.debug) out << "epsilon_f = " << epsilon_f << endl;
     NewtonFunctionInfo info(start, step, ranges, fixed_parameters, epsilon_f);

@@ -131,8 +131,8 @@ MinimizationResult root_minuit::minimize(const theta::Function & f, const theta:
             default:
                 s << " [unexpected status code]";
         }
-        std::cout<<s.str()<<std::endl;
-        //throw MinimizationException(s.str());
+        //std::cout<<s.str()<<std::endl;
+        throw MinimizationException(s.str());
     }
 
     //6. convert result
