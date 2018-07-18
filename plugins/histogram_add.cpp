@@ -89,10 +89,10 @@ histogram_add::histogram_add(const Configuration & ctx){
     {
         integral += h.get_value(i);
     }
-    theta::out<<"-----------------------------"<< std::endl;
-    theta::out<<"histo_add: integral = "<<integral<< std::endl;
-    theta::out<<"-----------------------------"<< std::endl;
-    theta::out<< std::endl;
+    //theta::out<<"-----------------------------"<< std::endl;
+    //theta::out<<"histo_add: integral = "<<integral<< std::endl;
+    //theta::out<<"-----------------------------"<< std::endl;
+    //theta::out<< std::endl;
     
     set_histo(h);
 }
