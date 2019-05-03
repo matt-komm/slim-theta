@@ -80,7 +80,7 @@ private:
     //the two columns per parameter with value and error:
     std::vector<theta::Column> parameter_columns;
     std::vector<theta::Column> error_columns;
-    theta::Column c_nll, c_covariance, c_ks_ts, c_pchi2;
+    theta::Column c_nll, c_covariance, c_ks_ts, c_pchi2, c_pndof;
     
     // for writing prediction:
     std::map<theta::ObsId, theta::Column> c_pred;

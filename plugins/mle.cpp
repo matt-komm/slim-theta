@@ -9,6 +9,7 @@
 
 #include <sstream>
 #include <limits>
+#include <iostream>
 
 using namespace theta;
 using namespace std;
@@ -91,15 +92,51 @@ void mle::produce(const theta::Data & data, const theta::Model & model) {
     }
     if(write_pchi2){
         const ObsIds & obs = model.get_observables();
-        Data pred;
+        DataWithUncertainties pred;
         model.get_prediction(pred, minres.values);
         double pchi2 = 0.0;
+        int nbins = 0;
+        int nobs = 0;
+        
         for(ObsIds::const_iterator it=obs.begin(); it!=obs.end(); ++it){
             const Histogram1D & data_o = data[*it];
-            const Histogram1D & pred_o = pred[*it];
-            pchi2 += template_pchisquare(data_o.get_data(), pred_o.get_data(), data_o.size());
+            const Histogram1DWithUncertainties & pred_o = pred[*it];
+            //pchi2 += template_pchisquare(data_o.get_data(), pred_o.get_data(), data_o.size());
+            nbins += data_o.size();
+            //std::cout<<"obs "<<nobs<<std::endl;
+            ++nobs;
+            double maxr = 0.;
+            double dsum = 0.;
+            double psum = 0.;
+            double chi2sum = 0.;
+            for (int i = 0; i< data_o.size(); ++i)
+            {
+                double d = data_o.get(i);
+                dsum+=d;
+                double p = pred_o.get(i);
+                
+                //bb
+                const double p_unc2 = pred_o.get_uncertainty2(i);
+                double beta = 0.0;
+                if(p_unc2 > 0.0){
+                    double dummy;
+                    theta::utils::roots_quad(dummy, beta, p + p_unc2, p_unc2 * (p - d));
+                    p = beta + p;
+                }
+                
+                
+                psum+=p;
+                double r = d/p;
+                maxr = std::max(maxr,std::abs(r-1));
+                double chi2 = p-d+d*std::log(d/p);
+                chi2sum+=chi2;
+                //std::cout<<"  "<<i<<": d="<<d<<", p="<<p<<", d/p="<<r<<", chi2="<<(2*chi2)<<std::endl;
+            }
+            //std::cout<<"  sum"<<": d="<<dsum<<", p="<<psum<<", d/p="<<maxr<<", chi2="<<(2*chi2sum)<<std::endl;
+            pchi2+=chi2sum;
         }
         products_sink->set_product(c_pchi2, pchi2);
+        products_sink->set_product(c_pndof, nbins);
     }
 }
 
@@ -138,6 +175,7 @@ mle::mle(const theta::Configuration & cfg): Producer(cfg), start_step_ranges_ini
     }
     if(write_pchi2){
        c_pchi2 = products_sink->declare_product(*this, "pchi2", theta::typeDouble);
+       c_pndof = products_sink->declare_product(*this, "pndof", theta::typeInt);
     }
     if(write_prediction){
         ObsIds oids = vm->get_all_observables();

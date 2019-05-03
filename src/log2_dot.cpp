@@ -39,21 +39,22 @@ double theta::template_nllikelihood_robust(const double * data, const double * p
 double theta::template_pchisquare(const double * data, const double * pred, unsigned int n){
     double result = 0.0;
     for(unsigned int  i=0; i<n; ++i){
-        const double n = data[i];
+        const double d = data[i];
         const double mu = pred[i];
+         
         if(mu > 0){
-            if(n > 0){
-                result += n * utils::log(n / mu) + mu - n;
+            if(d > 0){
+                result += d * utils::log(d / mu) + mu - d;
             }
             else{
                 result += mu;
             }
         }
-        else if(n > 0){
+        else if(d > 0){
             result = numeric_limits<double>::infinity();
             break;
         }
     }
-    result *= 2;
+    result *= 2.;
     return result;
 }
